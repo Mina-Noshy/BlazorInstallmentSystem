@@ -1,0 +1,221 @@
+﻿@page "/bills/create"
+
+<div>
+    <h4>اضافة فاتورة</h4>
+</div>
+
+@if (_bill == null || _clients == null)
+{
+    <Loading Title="Create Bill" Message="please wait..."></Loading>
+}
+else
+{
+<EditForm Model="@_bill" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <h3>الفاتورة</h3>
+    <hr />
+    <ValidationSummary />
+
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+            العميل
+        </label>
+        <div class="col-sm-10">
+            <InputSelect id="clientId" class="form-control" placeholder="اسم العميل"
+                         @bind-Value="_bill.ClientId">
+                @foreach (var client in _clients)
+                    {
+                    <option value="@client.Id">@client.Name</option>
+                    }
+                <ValidationMessage For="@(() => _bill.ClientId)" />
+            </InputSelect>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+            اصل المبلغ
+        </label>
+        <div class="col-sm-10">
+            <InputNumber id="originalAmount" class="form-control" placeholder="اصل المبلغ"
+                         @bind-Value="_bill.OriginalAmount"
+                         @onkeypress="OnOriginaOrPercentage_Changed">
+                <ValidationMessage For="@(() => _bill.OriginalAmount)" />
+            </InputNumber>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+            النسبة المئوية
+        </label>
+        <div class="col-sm-10">
+            <InputNumber id="percentage" class="form-control" placeholder="النسبة المئوية"
+                         @bind-Value="_bill.Percentage"
+                         @onkeypress="OnOriginaOrPercentage_Changed">
+                <ValidationMessage For="@(() => _bill.Percentage)" />
+            </InputNumber>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+            اجمالى المبلغ
+        </label>
+        <div class="col-sm-10">
+            <InputNumber readonly id="totalAmount" class="form-control" placeholder="اجمالى المبلغ"
+                         @bind-Value="_bill.TotalAmount">
+                <ValidationMessage For="@(() => _bill.TotalAmount)" />
+            </InputNumber>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+            المبلغ المدفوع
+        </label>
+        <div class="col-sm-10">
+            <InputNumber id="amountPaid" class="form-control" placeholder=" المبلغ المدفوع"
+                         @bind-Value="_bill.AmountPaid"
+                         @onkeypress="OnAmountPaid_Changed">
+                <ValidationMessage For="@(() => _bill.AmountPaid)" />
+            </InputNumber>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+            مبلغ التقسيط
+        </label>
+        <div class="col-sm-10">
+            <InputNumber readonly id="restAmount" class="form-control" placeholder=" مبلغ التقسيط"
+                         @bind-Value="_bill.RestAmount">
+                <ValidationMessage For="@(() => _bill.RestAmount)" />
+            </InputNumber>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+            عدد الاقساط
+        </label>
+        <div class="col-sm-10">
+            <InputNumber id="installmentCount" class="form-control" placeholder="عدد الاقساط"
+                         @bind-Value="_bill.InstallmentCount">
+                <ValidationMessage For="@(() => _bill.InstallmentCount)" />
+            </InputNumber>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+            غرامة التاخير
+        </label>
+        <div class="col-sm-10">
+            <InputNumber id="delayFine" class="form-control" placeholder="غرامة التاخير"
+                         @bind-Value="_bill.DelayFine">
+                <ValidationMessage For="@(() => _bill.DelayFine)" />
+            </InputNumber>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+            فئة غرامة التاخير
+        </label>
+        <div class="col-sm-10">
+            <InputSelect id="delayFineType" class="form-control" placeholder="فئة غرامة التاخير"
+                         @bind-Value="_bill.DelayFineType">
+                @foreach (var item in Enum.GetValues(typeof(DelayFineTypes)))
+                    {
+                    <option value="@item">@item</option>
+                    }
+                <ValidationMessage For="@(() => _bill.DelayFineType)" />
+            </InputSelect>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+            فئة القسط
+        </label>
+        <div class="col-sm-10">
+            <InputSelect id="installmentType" class="form-control" placeholder="فئة القسط"
+                         @bind-Value="_bill.InstallmentType">
+                @foreach (var item in Enum.GetValues(typeof(InstallmentTypes)))
+                    {
+                    <option value="@item">@item</option>
+                    }
+                <ValidationMessage For="@(() => _bill.InstallmentType)" />
+            </InputSelect>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+            بيانات الفاتورة
+        </label>
+        <div class="col-sm-10">
+            <InputTextArea id="description" class="form-control" placeholder="بيانات الفاتورة"
+                           @bind-Value="_bill.Description">
+                <ValidationMessage For="@(() => _bill.Description)" />
+            </InputTextArea>
+        </div>
+    </div>
+
+
+    <div>
+        <button type="submit" class="btn btn-success">انشاء الفاتورة</button>
+        <a href="/bills/list" class="btn btn-primary">الغاء</a>
+    </div>
+
+</EditForm>
+}
+
+@code {
+
+    [Inject]
+    public IBillServices _service { get; set; }
+
+    [Inject]
+    public NavigationManager _navigation { get; set; }
+
+    public Bill _bill { get; set; } = new Bill();
+
+    [Inject]
+    public IClientService _clientService { get; set; }
+
+    private IEnumerable<Client> _clients;
+
+    protected async override Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        _clients = await _clientService.GetAll();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        await _service.Add(_bill);
+        _navigation.NavigateTo("/bills/list");
+    }
+
+    private void OnOriginaOrPercentage_Changed()
+    {
+        try
+        {
+            _bill.TotalAmount = _bill.OriginalAmount + (_bill.OriginalAmount * _bill.Percentage / 100);
+        }
+        catch { }
+    }
+
+    private void OnAmountPaid_Changed()
+    {
+        try
+        {
+            _bill.RestAmount = _bill.TotalAmount - _bill.AmountPaid;
+        }
+        catch { }
+    }
+
+}

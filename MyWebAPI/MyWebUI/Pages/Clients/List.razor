@@ -1,0 +1,85 @@
+﻿@page "/clients/list"
+
+<div>
+    <h4>قائمة العملاء</h4>
+</div>
+
+@if (_clients == null)
+{
+    <Loading Title="Clients List" Message="please wait..."></Loading>
+}
+else
+{
+
+    if (_clients.Count() > 0)
+    {
+        <div style="margin-bottom:10px;">
+            <a href="/clients/create" class="btn btn-success">اضافة عميل</a>
+        </div>
+
+        <table class="table table-responsive">
+            <thead>
+                <tr>
+                    <th>الكود</th>
+                    <th>الاسم</th>
+                    <th>العنوان</th>
+                    <th>الهاتف</th>
+                    <th>الهاتف</th>
+                    <th>الهاتف</th>
+                    <th>البريد الالكترونى</th>
+                    <th>الفاكس</th>
+                    <th></th>
+                    <th>خيارات</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in _clients)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.Name</td>
+                        <td>@item.AddressDetails</td>
+                        <td>@item.Phone_1</td>
+                        <td>@item.Phone_2</td>
+                        <td>@item.Phone_3</td>
+                        <td>@item.Email</td>
+                        <td>@item.Fax</td>
+                        <td>
+                            <a href="@($"/clients/details/{item.Id}")" class="btn btn-primary">تفاصيل</a>
+                        </td>
+                        <td>
+                            <a href="@($"/clients/edit/{item.Id}")" class="btn btn-success">تعديل</a>
+                        </td>
+                        <td>
+                            <a href="@($"/clients/delete/{item.Id}")" class="btn btn-danger">حذف</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+<div class="text-center" style="margin:50px 10px;">
+    <h3>
+        قائمة العملاء فارغة <br /> <a href="/clients/create"> انشاء جديد</a>
+    </h3>
+</div>
+    }
+
+}
+
+@code {
+
+    [Inject]
+    public IClientService _service { get; set; }
+
+    private IEnumerable<Client> _clients;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _clients = await _service.GetAll();
+    }
+
+}

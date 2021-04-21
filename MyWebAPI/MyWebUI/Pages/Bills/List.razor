@@ -1,0 +1,93 @@
+﻿@page "/bills/list"
+
+<div>
+    <h4>قائمة الفواتير</h4>
+</div>
+
+@if (_bills == null)
+{
+    <Loading Title="Clients List" Message="please wait..."></Loading>
+}
+else
+{
+
+    if (_bills.Count() > 0)
+    {
+        <div style="margin-bottom:10px;">
+            <a href="/bills/create" class="btn btn-success">اضافة فاتورة</a>
+        </div>
+
+        <table class="table table-responsive">
+            <thead>
+                <tr>
+                    <th>الكود</th>
+                    <th>العميل</th>
+                    <th>اصل المبلغ</th>
+                    <th>النسبة المئوية</th>
+                    <th>اجمالى المبلغ</th>
+                    <th>المبلغ المدفوع</th>
+                    <th>مبلغ التقسيط</th>
+                    <th>عدد الاقساط</th>
+                    <th>غرامة التأخير</th>
+                    <th>فئة غرامة التاخير</th>
+                    <th>فئة القسط</th>
+                    <th>تاريخ الفاتورة</th>
+                    <th></th>
+                    <th>خيارات</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in _bills)
+                {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.GetClient.Name</td>
+                    <td>@item.OriginalAmount</td>
+                    <td>@item.Percentage %</td>
+                    <td>@item.TotalAmount</td>
+                    <td>@item.AmountPaid</td>
+                    <td>@item.RestAmount</td>
+                    <td>@item.InstallmentCount</td>
+                    <td>@item.DelayFine</td>
+                    <td>@item.DelayFineType</td>
+                    <td>@item.InstallmentType</td>
+                    <td>@item.BillDate.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        <a href="@($"/bills/details/{item.Id}")" class="btn btn-primary">تفاصيل</a>
+                    </td>
+                    <td>
+                        <a href="@($"/bills/edit/{item.Id}")" class="btn btn-success">تعديل</a>
+                    </td>
+                    <td>
+                        <a href="@($"/bills/delete/{item.Id}")" class="btn btn-danger">حذف</a>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="text-center" style="margin:50px 10px;">
+            <h3>
+                قائمة الفواتير فارغة <br /> <a href="/bills/create"> انشاء جديد</a>
+            </h3>
+        </div>
+    }
+
+}
+
+@code {
+
+    [Inject]
+    public IBillServices _service { get; set; }
+
+    private IEnumerable<Bill> _bills;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _bills = await _service.GetAll();
+    }
+
+}

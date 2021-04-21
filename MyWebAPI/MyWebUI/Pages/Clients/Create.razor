@@ -1,0 +1,125 @@
+﻿@page "/clients/create"
+
+<div>
+    <h4>اضافة عميل</h4>
+</div>
+
+@if (_client == null)
+{
+    <Loading Title="Create Client" Message="please wait..."></Loading>
+}
+else
+{
+<EditForm Model="@_client" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <h3>العميل</h3>
+    <hr />
+    <ValidationSummary />
+
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+            الاسم
+        </label>
+        <div class="col-sm-10">
+            <InputText id="name" class="form-control" placeholder="اسم العميل"
+                       @bind-Value="_client.Name">
+                <ValidationMessage For="@(() => _client.Name)" />
+            </InputText>
+        </div>
+    </div>
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+            العنوان
+        </label>
+        <div class="col-sm-10">
+            <InputText id="addressDetails" class="form-control" placeholder="العنوان (مدينة,حى,شارع)"
+                       @bind-Value="_client.AddressDetails">
+                <ValidationMessage For="@(() => _client.AddressDetails)" />
+            </InputText>
+        </div>
+    </div>
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+           رقم الهاتف
+        </label>
+        <div class="col-sm-10">
+            <InputText id="phone_1" class="form-control" placeholder="رقم الهاتف المحمول"
+                       @bind-Value="_client.Phone_1">
+                <ValidationMessage For="@(() => _client.Phone_1)" />
+            </InputText>
+        </div>
+    </div>
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+            رقم الهاتف
+        </label>
+        <div class="col-sm-10">
+            <InputText id="phone_2" class="form-control" placeholder="رقم الهاتف المحمول"
+                       @bind-Value="_client.Phone_2">
+                <ValidationMessage For="@(() => _client.Phone_2)" />
+            </InputText>
+        </div>
+    </div>
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+            رقم الهاتف
+        </label>
+        <div class="col-sm-10">
+            <InputText id="phone_3" class="form-control" placeholder="رقم الهاتف المحمول"
+                       @bind-Value="_client.Phone_3">
+                <ValidationMessage For="@(() => _client.Phone_3)" />
+            </InputText>
+        </div>
+    </div>
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+            البريد الالكترونى
+        </label>
+        <div class="col-sm-10">
+            <InputText id="email" class="form-control" placeholder="البريد الالكترونى"
+                       @bind-Value="_client.Email">
+                <ValidationMessage For="@(() => _client.Email)" />
+            </InputText>
+        </div>
+    </div>
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+            فاكس
+        </label>
+        <div class="col-sm-10">
+            <InputText id="fax" class="form-control" placeholder="رقم الفاكس"
+                       @bind-Value="_client.Fax">
+                <ValidationMessage For="@(() => _client.Fax)" />
+            </InputText>
+        </div>
+    </div>
+    <div>
+        <button type="submit" class="btn btn-success">اضافة العميل</button>
+        <a href="/clients/list" class="btn btn-primary">الغاء</a>
+    </div>
+
+</EditForm>
+}
+
+@code {
+
+    [Inject]
+    public IClientService _service { get; set; }
+
+    [Inject]
+    public NavigationManager _navigation { get; set; }
+
+    public Client _client { get; set; } = new Client();
+
+    protected async override Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        await _service.Add(_client);
+        _navigation.NavigateTo("/clients/list");
+    }
+
+}

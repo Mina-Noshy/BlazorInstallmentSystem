@@ -1,0 +1,219 @@
+﻿@page "/installments/list"
+
+<div>
+    <h4>قائمة الاقساط</h4>
+
+    <div class="input-group col-md-4">
+        <input type="date" @bind-value="_dateTime" class="form-control" />
+        <div class="input-group-append">
+            <button @onclick="@(e => GetByDay())" class="input-group-text text-success font-weight-bold"><i class="fa fa-search"></i></button>
+        </div>
+    </div>
+
+    <button style="margin:3px;" @onclick="@(e => GetAll())" class="btn btn-outline-info">جميع الاقساط</button>
+    <button style="margin:3px;" @onclick="@(e => GetAllUnreceived())" class="btn btn-outline-info">كل الاقساط الغير مستلمة</button>
+    <button style="margin:3px;" @onclick="@(e => GetAllReceived())" class="btn btn-outline-info">كل الاقساط المستلمة</button>
+
+    <button style="margin:3px;" @onclick="@(e => GetAllToday())" class="btn btn-outline-info">اقساط اليوم</button>
+    <button style="margin:3px;" @onclick="@(e => GetUnreceivedToday())" class="btn btn-outline-info">اقساط اليوم الغير مستلمة</button>
+    <button style="margin:3px;" @onclick="@(e => GetReceivedToday())" class="btn btn-outline-info">اقساط اليوم المستلمة</button>
+
+</div>
+
+@if (_installments == null)
+{
+    <Loading Title="Installments List" Message="please wait..."></Loading>
+}
+else
+{
+
+    if (_installments.Count() > 0)
+    {
+        int days = 0;
+
+<table class="table table-responsive">
+    <thead>
+        <tr>
+            <th>الكود</th>
+            <th>العميل</th>
+            <th>قيمة القسط</th>
+            <th>تاريخ الاستحقاق</th>
+            <th>التاخير</th>
+            <th>غرامة التاخير</th>
+            <th>الاستلام</th>
+            <th>خيارات</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in _installments)
+        {
+            if (item.DueDate.Date <= DateTime.UtcNow.Date)
+            {
+                days = (int)(DateTime.UtcNow - item.DueDate).TotalDays;
+            }
+            else
+            {
+                days = 0;
+            }
+
+        <tr>
+            <td>@item.Id</td>
+            <td>@item.GetBill.GetClient.Name</td>
+            <td>@item.AmountValue.ToString(".00")</td>
+            <td>@item.DueDate.ToString("dd/MM/yyyy")</td>
+
+            @if (item.GetBill.DelayFineType == DelayFineTypes.سنوى)
+            {
+                if (days != 0)
+                {
+                    <td>
+                        @((days/365).ToString("0")) سنة
+                    </td>
+                    <td>
+                        @(((days / 365) * item.GetBill.DelayFine).ToString("0")) جنيه
+                    </td>
+                }
+                else
+                {
+                    <td>
+                        0 سنة
+                    </td>
+                    <td>
+                        0 جنيه
+                    </td>
+                }
+            }
+            else if (item.GetBill.DelayFineType == DelayFineTypes.شهرى)
+            {
+                if (days != 0)
+                {
+                    <td>
+                        @((days/30).ToString("0")) شهر
+                    </td>
+                    <td>
+                        @(((days / 30) * item.GetBill.DelayFine).ToString("0")) جنيه
+                    </td>
+                }
+                else
+                {
+                    <td>
+                        0 شهر
+                    </td>
+                    <td>
+                        0 جنيه
+                    </td>
+                }
+            }
+            else
+            {
+                if (days != 0)
+                {
+                    <td>
+                        @((days).ToString("0")) يوم
+                    </td>
+                    <td>
+                        @((days * item.GetBill.DelayFine).ToString("0")) جنيه
+                    </td>
+                }
+                else
+                {
+                    <td>
+                        0 يوم
+                    </td>
+                    <td>
+                        0 جنيه
+                    </td>
+                }
+            }
+
+            @if (item.ReceivedDate != null)
+            {
+                <td>@item.ReceivedDate?.ToString("dd/MM/yyyy")</td>
+                <a href="@($"/installments/details/{item.Id}")" class="btn btn-primary">تفاصيل</a>
+            }
+            else
+            {
+                if (item.DueDate < DateTime.UtcNow)
+                {
+                    <td class="text-danger">فى انتظار السداد</td>
+                    <a href="@($"/installments/details/{item.Id}")" class="btn btn-danger">تفاصيل</a>
+                }
+                else
+                {
+                    <td>ليس بعد</td>
+                    <a href="@($"/installments/details/{item.Id}")" class="btn btn-success">تفاصيل</a>
+                }
+            }
+        </tr>
+        }
+    </tbody>
+</table>
+    }
+    else
+    {
+        <div class="text-center" style="margin:50px 10px;">
+            <h3>
+                قائمة الاقساط فارغة <br /> <a href="/bills/create">انشاء فاتورة الان </a>
+            </h3>
+        </div>
+    }
+
+}
+
+@code {
+
+    [Inject]
+    public IInstallmentServices _service { get; set; }
+
+    private IEnumerable<Installment> _installments;
+
+    private DateTime _dateTime = DateTime.UtcNow.Date;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _installments = await _service.GetAllToday();
+    }
+
+    private async Task GetAll()
+    {
+        _installments = null;
+        _installments = await _service.GetAll();
+    }
+
+    private async Task GetAllReceived()
+    {
+        _installments = null;
+        _installments = await _service.GetAllReceived();
+    }
+
+    private async Task GetAllUnreceived()
+    {
+        _installments = null;
+        _installments = await _service.GetAllUnreceived();
+    }
+
+    private async Task GetAllToday()
+    {
+        _installments = null;
+        _installments = await _service.GetAllToday();
+    }
+
+    private async Task GetReceivedToday()
+    {
+        _installments = null;
+        _installments = await _service.GetReceivedToday();
+    }
+
+    private async Task GetUnreceivedToday()
+    {
+        _installments = null;
+        _installments = await _service.GetUnreceivedToday();
+    }
+
+    private async Task GetByDay()
+    {
+        _installments = null;
+        _installments = await _service.GetByDay(_dateTime);
+    }
+
+}

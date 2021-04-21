@@ -1,0 +1,146 @@
+﻿@page "/clients/details/{id}"
+
+<div>
+    <h4>بيانات العميل</h4>
+</div>
+
+@if (_client == null)
+{
+    <Loading Title="Client Details" Message="please wait..."></Loading>
+}
+else
+{
+
+    <div>
+        <h5>العميل</h5>
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-2">
+                الاسم
+            </dt>
+            <dd class="col-sm-10">
+                @_client.Name
+            </dd>
+            <dt class="col-sm-2">
+                العنوان
+            </dt>
+            <dd class="col-sm-10">
+                @_client.AddressDetails
+            </dd>
+            <dt class="col-sm-2">
+                رقم الهاتف
+            </dt>
+            <dd class="col-sm-10">
+                @_client.Phone_1
+            </dd>
+            <dt class="col-sm-2">
+                رقم الهاتف
+            </dt>
+            <dd class="col-sm-10">
+                @_client.Phone_2
+            </dd>
+            <dt class="col-sm-2">
+                رقم الهاتف
+            </dt>
+            <dd class="col-sm-10">
+                @_client.Phone_3
+            </dd>
+            <dt class="col-sm-2">
+                البريد الاكترونى
+            </dt>
+            <dd class="col-sm-10">
+                @_client.Email
+            </dd>
+            <dt class="col-sm-2">
+                رقم الفاكس
+            </dt>
+            <dd class="col-sm-10">
+                @_client.Fax
+            </dd>
+        </dl>
+    </div>
+    <div>
+        <a href="/clients/list" class="btn btn-primary">رجوع</a>
+        <a href="@($"/clients/edit/{_client.Id}")" class="btn btn-success">تعديل</a>
+        <a href="@($"/clients/delete/{_client.Id}")" class="btn btn-danger">حذف</a>
+    </div>
+
+    if (_client.GetBills.Count > 0)
+    {
+        <div style="margin-top:30px;">
+            <h3>فواتير العميل</h3>
+
+            <table class="table table-responsive">
+                <thead>
+                    <tr>
+                        <th>الكود</th>
+                        <th>اصل المبلغ</th>
+                        <th>النسبة المئوية</th>
+                        <th>اجمالى المبلغ</th>
+                        <th>المبلغ المدفوع</th>
+                        <th>مبلغ التقسيط</th>
+                        <th>عدد الاقساط</th>
+                        <th>الغرامة اليومية</th>
+                        <th>فئة غرامة التاخير</th>
+                        <th>فئة القسط</th>
+                        <th>تاريخ الفاتورة</th>
+                        <th>بيانات الفاتورة</th>
+                        <th>خيارات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in _client.GetBills)
+                    {
+                        <tr>
+                            <td>@item.Id</td>
+                            <td>@item.OriginalAmount</td>
+                            <td>@item.Percentage %</td>
+                            <td>@item.TotalAmount</td>
+                            <td>@item.AmountPaid</td>
+                            <td>@item.RestAmount</td>
+                            <td>@item.InstallmentCount</td>
+                            <td>@item.DelayFine</td>
+                            <td>@item.DelayFineType</td>
+                            <td>@item.InstallmentType</td>
+                            <td>@item.BillDate.ToString("dd/MM/yyyy")</td>
+                            <td>@item.Description</td>
+                            <td>
+                                <a href="@($"/bills/details/{item.Id}")" class="btn btn-primary">اقساط الفاتورة</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+        </div>
+
+    }
+    else
+    {
+        <div class="text-center" style="margin:50px 10px;">
+            <h3>
+                هذا العميل ليس لديه اى فواتير  <br /> <a href="/bills/create">انشاء الان</a>
+            </h3>
+        </div>
+    }
+}
+
+@code {
+
+    [Inject]
+    public IClientService _service { get; set; }
+
+    public Client _client { get; set; }
+
+
+    [Parameter]
+    public string Id { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        _client = await _service.Find(int.Parse(Id));
+    }
+
+}

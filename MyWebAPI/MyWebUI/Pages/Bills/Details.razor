@@ -1,0 +1,261 @@
+﻿@page "/bills/details/{id}"
+
+<div>
+    <h4>تفاصيل الفاتورة</h4>
+</div>
+
+@if (_bill == null)
+{
+    <Loading Title="Bill Details" Message="please wait..."></Loading>
+}
+else
+{
+
+    <div>
+        <h5>الفاتورة</h5>
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-2">
+                العميل
+            </dt>
+            <dd class="col-sm-10">
+                @_bill.GetClient.Name
+            </dd>
+            <dt class="col-sm-2">
+                اصل المبلغ
+            </dt>
+            <dd class="col-sm-10">
+                @_bill.OriginalAmount
+            </dd>
+            <dt class="col-sm-2">
+                النسبة المئوية
+            </dt>
+            <dd class="col-sm-10">
+                @_bill.Percentage %
+            </dd>
+            <dt class="col-sm-2">
+                اجمالى المبلغ
+            </dt>
+            <dd class="col-sm-10">
+                @_bill.TotalAmount
+            </dd>
+            <dt class="col-sm-2">
+                المبلغ المدفوع
+            </dt>
+            <dd class="col-sm-10">
+                @_bill.AmountPaid
+            </dd>
+            <dt class="col-sm-2">
+                مبلغ التقسيط
+            </dt>
+            <dd class="col-sm-10">
+                @_bill.RestAmount
+            </dd>
+            <dt class="col-sm-2">
+                عدد الاقساط
+            </dt>
+            <dd class="col-sm-10">
+                @_bill.InstallmentCount
+            </dd>
+            <dt class="col-sm-2">
+                غرامة التاخير
+            </dt>
+            <dd class="col-sm-10">
+                @_bill.DelayFine
+            </dd>
+            <dt class="col-sm-2">
+                فئة غرامة التاخير
+            </dt>
+            <dd class="col-sm-10">
+                @_bill.DelayFineType
+            </dd>
+            <dt class="col-sm-2">
+                فئة القسط
+            </dt>
+            <dd class="col-sm-10">
+                @_bill.InstallmentType
+            </dd>
+            <dt class="col-sm-2">
+                تاريخ الفاتورة
+            </dt>
+            <dd class="col-sm-10">
+                @_bill.BillDate
+            </dd>
+            <dt class="col-sm-2">
+                بيانات الفاتورة
+            </dt>
+            <dd class="col-sm-10">
+                @_bill.Description
+            </dd>
+        </dl>
+    </div>
+    <div>
+        <a href="/bills/list" class="btn btn-primary">رجوع</a>
+        <a href="@($"/bills/edit/{_bill.Id}")" class="btn btn-success">تعديل</a>
+        <a href="@($"/bills/delete/{_bill.Id}")" class="btn btn-danger">حذف</a>
+    </div>
+
+    if (_bill.GetInstallments.Count > 0)
+    {
+        int days = 0;
+
+        <div style="margin-top:30px;">
+            <h3>اقساط الفاتورة</h3>
+
+            <table class="table table-responsive">
+                <thead>
+                    <tr>
+                        <th>قيمة القسط</th>
+                        <th>تاريخ الاستحقاق</th>
+                        <th>التاخير</th>
+                        <th>غرامة التاخير</th>
+                        <th>الاستلام</th>
+                        <th>خيارات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in _bill.GetInstallments)
+                    {
+                        
+                        if(item.DueDate.Date <= DateTime.UtcNow.Date)
+                        {
+                            days = (int)(DateTime.UtcNow - item.DueDate).TotalDays;
+                        }
+                        else
+                        {
+                            days = 0;
+                        }
+
+                    <tr>
+                        <td>@item.AmountValue.ToString("0.0")</td>
+                        <td>@item.DueDate.ToString("dd/MM/yyyy")</td>
+
+                        @if (_bill.DelayFineType == DelayFineTypes.سنوى)
+                        {
+                            if (days != 0)
+                            {
+                                <td>
+                                    @((days/365).ToString("0")) سنة
+                                </td>
+                                <td>
+                                    @(((days / 365) * _bill.DelayFine).ToString("0")) جنيه
+                                </td>
+                            }
+                            else
+                            {
+                                <td>
+                                    0 سنة
+                                </td>
+                                <td>
+                                    0 جنيه
+                                </td>
+                            }
+                        }
+                        else if (_bill.DelayFineType == DelayFineTypes.شهرى)
+                        {
+                            if (days != 0)
+                            {
+                                <td>
+                                    @((days/30).ToString("0")) شهر
+                                </td>
+                                <td>
+                                    @(((days / 30) * _bill.DelayFine).ToString("0")) جنيه
+                                </td>
+                            }
+                            else
+                            {
+                                <td>
+                                    0 شهر
+                                </td>
+                                <td>
+                                    0 جنيه
+                                </td>
+                            }
+                        }
+                        else
+                        {
+                            if (days != 0)
+                            {
+                                <td>
+                                    @((days).ToString("0")) يوم
+                                </td>
+                                <td>
+                                    @((days * _bill.DelayFine).ToString("0")) جنيه
+                                </td>
+                            }
+                            else
+                            {
+                                <td>
+                                    0 يوم
+                                </td>
+                                <td>
+                                    0 جنيه
+                                </td>
+                            }
+                        }
+
+                        @if (item.ReceivedDate != null)
+                        {
+                            <td>@item.ReceivedDate?.ToString("dd/MM/yyyy")</td>
+                            <button @onclick="@(e => Update(item))" class="btn btn-primary">الغاء الاستلام</button>
+                        }
+                        else
+                        {
+                            if (item.DueDate < DateTime.UtcNow)
+                            {
+                                <td class="text-danger">فى انتظار السداد</td>
+                                <button @onclick="@(e => Update(item))" class="btn btn-danger">استلام</button>
+                            }
+                            else
+                            {
+                                <td>ليس بعد</td>
+                                <button @onclick="@(e => Update(item))" class="btn btn-success">استلام</button>
+                            }
+                        }
+                    </tr>
+                    }
+                </tbody>
+            </table>
+
+        </div>
+
+    }
+    else
+    {
+        <div class="text-center">
+            <h3>هذه الفاتورة لا تحتوى على اى اقساط</h3>
+        </div>
+    }
+}
+
+@code {
+
+    [Inject]
+    public IBillServices _service { get; set; }
+
+    public Bill _bill { get; set; }
+
+
+    [Parameter]
+    public string Id { get; set; }
+
+    [Inject]
+    public IInstallmentServices _installmentService { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        _bill = await _service.Find(int.Parse(Id));
+    }
+
+    private async Task Update(Installment installment)
+    {
+        await _installmentService.Update(installment);
+        if (installment.ReceivedDate == null)
+            installment.ReceivedDate = DateTime.UtcNow;
+        else
+            installment.ReceivedDate = null;
+    }
+
+}

@@ -1,0 +1,225 @@
+﻿@page "/installments/details/{id}"
+
+<div>
+    <h4>تفاصيل القسط</h4>
+</div>
+
+@if (_installment == null)
+{
+    <Loading Title="Client Details" Message="please wait..."></Loading>
+}
+else
+{
+    int days = (int)(DateTime.UtcNow - _installment.DueDate).TotalDays;
+
+    <div>
+        <h5>القسط</h5>
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-2">
+                الكود
+            </dt>
+            <dd class="col-sm-10">
+                @_installment.Id
+            </dd>
+            <dt class="col-sm-2">
+                العميل
+            </dt>
+            <dd class="col-sm-10">
+                @_installment.GetBill.GetClient.Name
+            </dd>
+            <dt class="col-sm-2">
+                قيمة القسط
+            </dt>
+            <dd class="col-sm-10">
+                @_installment.AmountValue
+            </dd>
+            <dt class="col-sm-2">
+                تاريخ الاستحقاق
+            </dt>
+            <dd class="col-sm-10">
+                @_installment.DueDate.ToString("dd/MM/yyyy")
+            </dd>
+
+            @if (_installment.GetBill.DelayFineType == DelayFineTypes.سنوى)
+            {
+                if (days != 0)
+                {
+                    <dt class="col-sm-2">
+                        التأخير
+                    </dt>
+                    <dd class="col-sm-10">
+                        @((days/365).ToString("0")) سنة
+                    </dd>
+
+                    <dt class="col-sm-2">
+                        غرامة التأخير
+                    </dt>
+                    <dd class="col-sm-10">
+                        @(((days / 365) * _installment.GetBill.DelayFine).ToString("0")) جنيه
+                    </dd>
+                }
+                else
+                {
+                    <dt class="col-sm-2">
+                        التأخير
+                    </dt>
+                    <dd class="col-sm-10">
+                        0 سنة
+                    </dd>
+                    <dt class="col-sm-2">
+                        غرامة التأخير
+                    </dt>
+                    <dd class="col-sm-10">
+                        0 جنيه
+                    </dd>
+                }
+            }
+            else if (_installment.GetBill.DelayFineType == DelayFineTypes.شهرى)
+            {
+                if (days != 0)
+                {
+                    <dt class="col-sm-2">
+                        التأخير
+                    </dt>
+                    <dd class="col-sm-10">
+                        @((days/30).ToString("0")) شهر
+                    </dd>
+                    <dt class="col-sm-2">
+                        غرامة التأخير
+                    </dt>
+                    <dd class="col-sm-10">
+                        @(((days / 30) * _installment.GetBill.DelayFine).ToString("0")) جنيه
+                    </dd>
+                }
+                else
+                {
+                    <dt class="col-sm-2">
+                        التأخير
+                    </dt>
+                    <dd class="col-sm-10">
+                        0 شهر
+                    </dd>
+                    <dt class="col-sm-2">
+                        غرامة التأخير
+                    </dt>
+                    <dd class="col-sm-10">
+                        0 جنيه
+                    </dd>
+                }
+            }
+            else
+            {
+                if (days != 0)
+                {
+                    <dt class="col-sm-2">
+                        التأخير
+                    </dt>
+                    <dd class="col-sm-10">
+                        @((days).ToString("0")) يوم
+                    </dd>
+                    <dt class="col-sm-2">
+                        غرامة التأخير
+                    </dt>
+                    <dd class="col-sm-10">
+                        @((days * _installment.GetBill.DelayFine).ToString("0")) جنيه
+                    </dd>
+                }
+                else
+                {
+                    <dt class="col-sm-2">
+                        التأخير
+                    </dt>
+                    <dd class="col-sm-10">
+                        0 يوم
+                    </dd>
+                    <dt class="col-sm-2">
+                        غرامة التأخير
+                    </dt>
+                    <dd class="col-sm-10">
+                        0 جنيه
+                    </dd>
+                }
+            }
+
+
+            <dt class="col-sm-2">
+                الاستلام
+            </dt>
+            @if (_installment.ReceivedDate != null)
+            {
+                <dd class="col-sm-10 text-primary">
+                    @_installment.ReceivedDate?.ToString("dd/MM/yyyy")
+                </dd>
+            }
+            else
+            {
+
+                if (_installment.DueDate < DateTime.UtcNow)
+                {
+                    <dd class="col-sm-10 text-danger">
+                        فى انتظار السداد
+                    </dd>
+                }
+                else
+                {
+                    <dd class="col-sm-10 text-success">
+                        ليس بعد
+                    </dd>
+                }
+            }
+        </dl>
+        <div style="margin-bottom:20px;">
+            @if (_installment.ReceivedDate != null)
+            {
+                <button @onclick="@(e => Update(_installment))" class="btn btn-primary">الغاء الاستلام</button>
+            }
+            else
+            {
+
+                if (_installment.DueDate < DateTime.UtcNow)
+                {
+                    <button @onclick="@(e => Update(_installment))" class="btn btn-danger">استلام</button>
+                }
+                else
+                {
+                    <button @onclick="@(e => Update(_installment))" class="btn btn-success">استلام</button>
+                }
+            }
+        </div>
+    </div>
+    <div>
+        <a href="/installments/list" class="btn btn-primary">Back</a>
+    </div>
+
+    
+}
+
+@code {
+
+    [Inject]
+    public IInstallmentServices _service { get; set; }
+
+    public Installment _installment { get; set; }
+
+
+    [Parameter]
+    public string Id { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        _installment = await _service.Find(int.Parse(Id));
+    }
+
+    private async Task Update(Installment installment)
+    {
+        await _service.Update(installment);
+        if (installment.ReceivedDate == null)
+            installment.ReceivedDate = DateTime.UtcNow;
+        else
+            installment.ReceivedDate = null;
+    }
+
+}
